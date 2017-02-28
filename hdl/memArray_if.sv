@@ -13,7 +13,7 @@
 //////////////////////////////////////////////////////////////////////
 
 // global definitions, parameters, etc.
-import mcDefs::*;
+import definitions::*;
 	
 interface memArray_if #(parameter ADDRWIDTH = 12)();
 

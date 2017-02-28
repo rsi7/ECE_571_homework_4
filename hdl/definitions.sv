@@ -26,6 +26,7 @@
 		typedef	logic		unsigned	[1:0]	ulogic2;
 		typedef	logic		unsigned	[3:0]	ulogic4;
 		typedef	logic		unsigned	[7:0]	ulogic8;
+		typedef logic		unsigned	[11:0]	uloigc12;
 		typedef	logic		unsigned	[15:0]	ulogic16;
 		typedef	logic		unsigned	[31:0]	ulogic32;
 		typedef	logic		unsigned	[63:0]	ulogic64;
@@ -42,29 +43,31 @@
 		// typedef for boolean variables
 		typedef	enum {true, false} bool_t;
 
-		// type for classifying packet transaction
-		typedef enum logic unsigned {WRITE = 1'b0, READ = 1'b1} pktType_t;
+		///////////////////////////////////////
+		// import from mcDefs.sv file		 //
+		// included in HW #4 release package //
+		///////////////////////////////////////
 
-		// typedef for state
-		typedef enum logic unsigned [2:0] {	
+		parameter	BUSWIDTH = 16;
+		parameter	DATAPAYLOADSIZE = 4;
+		parameter	MEMSIZE = 256;
 
-			STATE_A = 3'd0, 
-			STATE_B = 3'd1, 
-			STATE_C = 3'd2, 
-			STATE_D = 3'd3, 
-			STATE_E = 3'd4,
-			STATE_X = 3'bxxx
+		// page number for the memory controllers
+		parameter [3:0] MEMPAGE1 = 4'h2;
+		parameter [3:0] MEMPAGE2 = 4'hF;
 
-			} state_t;
+		// structure for holding split address 
+		// 16'b address = 4'b page + 12'b location
+		typedef struct packed {
+			ulogic4		page;
+			ulogic12	loc;
+		} memAddr_t;
 
-		// typedef for memory packet structure
-		typedef struct {
-
-			pktType_t	Type;
-			ulogic16	Address;
-			ulogic16	Data[4];
-
-		} memPkt_t;
+		// structure for holding full memory address
+		typedef union packed {
+			memAddr_t	PgLoc;
+			ulogic16	ma;	
+		} areg_t;
 
 	endpackage
 

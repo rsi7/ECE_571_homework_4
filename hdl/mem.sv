@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////////
 
 // global definitions, parameters, etc.
-import mcDefs::*;
+import definitions::*;
 
 module mem
 #(

@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////
 
 // global definitions, parameters, etc.
-import mcDefs::*;
+import definitions::*;
 	
 interface main_bus_if
 (
