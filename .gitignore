@@ -1,0 +1,17 @@
+# .gitignore file for ECE 581 Homework 4
+
+$ cat .gitignore
+
+# ignore everything in docs
+# these are just PDFs and Word files
+# available on D2L course website
+
+/docs/*
+
+# ignore config
+# handles the formatting of Questa Wave window
+
+/config/*
+
+# ignore generated outputs
+/out/*
