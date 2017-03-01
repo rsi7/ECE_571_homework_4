@@ -20,54 +20,72 @@
 // The read data from those cases isn't returned.  No harm, no foul.
 //
 // Original version created by Don T. but the modifications are mine
-////////////////////////////////////////////////////////////////
+//
+////////////////////////////////////////////////////////////////////////////////
 
-// global definitions, parameters, etc.
-import definitions::*;
+`include "definitions.sv"
 
-module mem
-#(
-	parameter MEMDEPTH = 2**16
-)
-(
-	main_bus_if							MBUS,	// Main bus interface 
-												// you get the clock/reset from here
-	memArray_if.MemIF					MIF		// memory array interface
-												// you get the memory address, data and control from here
-);
+	/************************************************************************/
+	/* Top-level port declarations											*/
+	/************************************************************************/
 
+	module mem #(parameter MEMDEPTH = 2**16) (
 
-// parameter BUSWIDTH is provided in mcDefs.sv
-localparam ADDRWIDTH = $clog2(MEMDEPTH);	// number of address bits for the array
+		main_bus_if			MBUS,	// Main bus interface 
+									// you get the clock/reset from here
 
-// declare internal variables
-logic	[BUSWIDTH-1:0]		M[int];			// memory array implemented as an Associative array
-											// because accesses may be sparse 
+		memArray_if.MemIF	MIF		// memory array interface
+									// get the memory address, data control here
+	);
 
-// read a location from memory.  We need to check rdEn
-// to make sure it's asserted because it could be 1'z
-// 1'z will result in x because we used == for the compare
-// and x is considered false in SystemVerilog.  We also check
-// to see if the memory location has been written.  If not, we
-// return Zs.
-always_comb begin
-	if (M.exists(MIF.Addr) & (MIF.rdEn == 1'b1)) begin
-		MIF.DataOut = M[int'(MIF.Addr)];
+	/************************************************************************/
+	/* Local parameters and variables										*/
+	/************************************************************************/
+
+	localparam ADDRWIDTH = $clog2(MEMDEPTH);	// number of address bits for the array
+
+	logic	[BUSWIDTH-1:0]		M[int];			// memory array implemented as an Associative array
+												// because accesses may be sparse 
+
+	/************************************************************************/
+	/* always block : read memory											*/
+	/************************************************************************/
+
+	// read a location from memory.  We need to check rdEn
+	// to make sure it's asserted because it could be 1'z
+	// 1'z will result in x because we used == for the compare
+	// and x is considered false in SystemVerilog.  We also check
+	// to see if the memory location has been written.  If not, we
+	// return Zs.
+
+	always_comb begin
+
+		if (M.exists(MIF.Addr) & (MIF.rdEn == 1'b1)) begin
+			MIF.DataOut = M[int'(MIF.Addr)];
+		end
+
+		else begin
+			MIF.DataOut = 'z;
+		end
+
 	end
-	else begin
-		MIF.DataOut = 'z;
-	end
-end
 
-// write a location in memory
-// We need to check wrEn to make sure it's asserted
-// because it could be 1'z 
-always @(posedge MBUS.clk) begin
-	if (MIF.wrEn == 1'b1) begin
-		// delete the existing entry and create it anew
-		M.delete(int'(MIF.Addr));
-		M[int'(MIF.Addr)] = MIF.DataIn;
-	end
-end // write a location in memory
+	/************************************************************************/
+	/* always block : write memory											*/
+	/************************************************************************/
+
+	// write a location in memory
+	// We need to check wrEn to make sure it's asserted
+	// because it could be 1'z 
+
+	always @(posedge MBUS.clk) begin
+
+		if (MIF.wrEn == 1'b1) begin
+			// delete the existing entry and create it anew
+			M.delete(int'(MIF.Addr));
+			M[int'(MIF.Addr)] = MIF.DataIn;
+		end
+
+	end // write a location in memory
 
 endmodule
