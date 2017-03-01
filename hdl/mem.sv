@@ -86,6 +86,6 @@
 			M[int'(MIF.Addr)] = MIF.DataIn;
 		end
 
-	end // write a location in memory
+	end
 
 endmodule
