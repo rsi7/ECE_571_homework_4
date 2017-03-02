@@ -196,6 +196,6 @@ interface processor_if (main_bus_if.master M);
 				cycle_finish = 1'b1;
 
 			end
-	end
+	endcase
 
 endinterface : processor_if
