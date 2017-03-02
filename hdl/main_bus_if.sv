@@ -41,13 +41,13 @@ interface main_bus_if (
 
 	modport master (
 
-		input	clk,
-		input	resetH,
+		input		clk,
+		input		resetH,
 
-		output	AddrValid,
-		output	rw,
+		output		AddrValid,
+		output		rw,
 
-		inout	AddrData
+		inout		AddrData
 
 	);
 
@@ -57,11 +57,13 @@ interface main_bus_if (
 
 	modport slave (
 
-		input	clk,
-		input	resetH,
-		input	AddrValid,
-		input	rw,
-		inout	AddrData
+		input		clk,
+		input		resetH,
+
+		input		AddrValid,
+		input		rw,
+		
+		inout		AddrData
 
 	);
 	

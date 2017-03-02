@@ -10,7 +10,7 @@
 // but feel free to innovate) directly drives the ports of the shared memory 
 // through the MemArray interface in response to the protocol on the main bus. 
 //
-// When rw is asserted high the memory interface should initiate a read 
+// When rw is asserted high the memory interface should initiate S read 
 // operation to the memory and return the memory data on the AddrData
 // bus. When rw is deasserted (low) the memory interface should initiate a 
 // write operation to the memory starting at the address on AddrData 
@@ -31,9 +31,122 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/* Top-level port declarations											*/
 	/************************************************************************/
 	
-	main_bus_if.slave	S,		// interface to memory is a slave
+	main_bus_if.slave	S,		// interface to memory is S slave
 	memArray_if.MemIF	A		// interface to memory array
 	
 	);
+
+	/************************************************************************/
+	/* Local parameters and variables										*/
+	/************************************************************************/
+
+	ulogic1			type_FSM;
+	ulogic1			valid_FSM;
+	ulogic4			page_FSM;
+
+	ulogic16		baseaddr_FSM;
+	ulogic16		data_FSM;
+
+	state_t			state;
+	state_t			next;
+
+	/************************************************************************/
+	/* Mealy FSM Block 1: reset & state advancement							*/
+	/************************************************************************/
+
+	always_ff@(posedge S.clk or posedge S.resetH) begin
+
+		// reset the FSM to waiting state
+		if (resetH) state <= STATE_A;
+
+		// otherwise, advance the state
+		else state <= next;
+
+	end
+
+	/************************************************************************/
+	/* Mealy FSM Block 2: state transitions									*/
+	/************************************************************************/
+
+	always_comb begin
+
+		unique case (state)
+
+			// each state lasts exactly 1 cycle,
+			// except STATE_A, which holds until valid_FSM
+
+			STATE_A : next = (valid_FSM) ? STATE_B : STATE_A;
+			STATE_B : next = STATE_C;
+			STATE_C : next = STATE_D;
+			STATE_D : next = STATE_E;
+			STATE_E : next = STATE_A;
+
+			default : next = STATE_X;
+
+		endcase
+	end
+
+	/************************************************************************/
+	/* Mealy FSM Block 3: assigning outputs									*/
+	/************************************************************************/
+
+	always_comb begin
+
+		A.Addr = ;
+		A.DataIn = 'bz;
+		A.rdEn = 1'b0;
+		A.wrEn = 1'b0;
+
+		S.AddrData = 'bz;
+
+		unique case (state)
+
+			STATE_A : begin
+
+				type_FSM = S.rw;
+				A.Addr = (S.AddrValid) ? S.AddrData : 'bz;
+
+			end
+
+			STATE_B : begin
+
+				A.rdEn = (type_FSM);
+				A.wrEn = (!type_FSM);
+
+				if (type_FSM) S.AddrData = A.DataOut;
+				else A.DataIn = S.AddrData;
+
+			end
+
+			STATE_C : begin
+
+				A.rdEn = (type_FSM);
+				A.wrEn = (!type_FSM);
+
+				if (type_FSM) S.AddrData = A.DataOut;
+				else A.DataIn = S.AddrData;
+
+			end
+
+			STATE_D : begin
+
+				A.rdEn = (type_FSM);
+				A.wrEn = (!type_FSM);
+
+				if (type_FSM) S.AddrData = A.DataOut;
+				else A.DataIn = S.AddrData;
+
+			end
+
+			STATE_E : begin
+
+				A.rdEn = (type_FSM);
+				A.wrEn = (!type_FSM);
+
+				if (type_FSM) S.AddrData = A.DataOut;
+				else A.DataIn = S.AddrData;
+
+			end
+	end
 
 endinterface : memory_if

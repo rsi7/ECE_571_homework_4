@@ -40,8 +40,17 @@
 		typedef	int			unsigned			uint32;
 		typedef	longint		unsigned			uint64;
 
-		// typedef for boolean variables
-		typedef	enum {true, false} bool_t;
+		// typedef for state
+		typedef enum logic unsigned [2:0] {	
+
+			STATE_A = 3'd0, 
+			STATE_B = 3'd1, 
+			STATE_C = 3'd2, 
+			STATE_D = 3'd3, 
+			STATE_E = 3'd4,
+			STATE_X = 3'bxxx
+
+			} state_t;
 
 		///////////////////////////////////////
 		// import from mcDefs.sv file		 //

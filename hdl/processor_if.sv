@@ -31,6 +31,22 @@ interface processor_if (main_bus_if.master M);
 	modport SndRcv(import Proc_rdReq, import Proc_wrReq);
 
 	/************************************************************************/
+	/* Local parameters and variables										*/
+	/************************************************************************/
+
+	ulogic1			cycle_finish;
+
+	ulogic1			type_FSM;
+	ulogic1			valid_FSM;
+	ulogic4			page_FSM;
+
+	ulogic16		baseaddr_FSM;
+	ulogic16		data_FSM;
+
+	state_t			state;
+	state_t			next;
+
+	/************************************************************************/
 	/* Task : Proc_rdReq													*/
 	/************************************************************************/
 
@@ -41,6 +57,24 @@ interface processor_if (main_bus_if.master M);
 		output bit 	[DBUFWIDTH-1:0] 	data
 
 		);
+
+		begin
+
+			cycle_finish <= 0;
+
+			page_FSM <= page;
+			baseaddr_FSM <= baseaddr;
+
+			valid_FSM <= 1'b1;
+			type_FSM <= 1'b1;
+
+			@(posedge M.clk) valid_FSM <= 1'b0;
+
+			wait(cycle_finish)
+
+			data <= data_FSM;
+
+		end
 
 	endtask : Proc_rdReq
 
@@ -56,7 +90,112 @@ interface processor_if (main_bus_if.master M);
 
 		);
 
+		begin
+
+			cycle_finish <= 0;
+
+			page_FSM <= page;
+			baseaddr_FSM <= baseaddr;
+			data_FSM <= data;
+
+			valid_FSM <= 1'b1;
+			type_FSM <= 1'b0;
+
+			@(posedge M.clk) valid_FSM <= 1'b0;
+
+			wait(cycle_finish)
+
+		end
+
 	endtask : Proc_wrReq
 
+	/************************************************************************/
+	/* Mealy FSM Block 1: reset & state advancement							*/
+	/************************************************************************/
+
+	always_ff@(posedge M.clk or posedge M.resetH) begin
+
+		// reset the FSM to waiting state
+		if (resetH) state <= STATE_A;
+
+		// otherwise, advance the state
+		else state <= next;
+
+	end
+
+	/************************************************************************/
+	/* Mealy FSM Block 2: state transitions									*/
+	/************************************************************************/
+
+	always_comb begin
+
+		unique case (state)
+
+			// each state lasts exactly 1 cycle,
+			// except STATE_A, which holds until valid_FSM
+
+			STATE_A : next = (valid_FSM) ? STATE_B : STATE_A;
+			STATE_B : next = STATE_C;
+			STATE_C : next = STATE_D;
+			STATE_D : next = STATE_E;
+			STATE_E : next = STATE_A;
+
+			default : next = STATE_X;
+
+		endcase
+	end
+
+	/************************************************************************/
+	/* Mealy FSM Block 3: assigning outputs									*/
+	/************************************************************************/
+
+	always_comb begin
+
+		M.rw = 1'b0;
+		M.AddrValid = 1'b0;
+		M.AddrData = 'bz;
+
+		cycle_finish = 1'b0;
+
+		unique case (state)
+
+			STATE_A : begin
+
+				M.rw = type_FSM;
+				M.AddrValid = valid_FSM;
+				M.AddrData = (valid_FSM) ? baseaddr_FSM : 'bz;
+
+			end
+
+			STATE_B : begin
+
+				if (type_FSM) data_FSM = M.AddrData[15:0];
+				else M.AddrData = data_FSM[15:0];
+
+			end
+
+			STATE_C : begin
+
+				if (type_FSM) data_FSM = M.AddrData[31:16];
+				else M.AddrData = data_FSM[31:16];
+
+			end
+
+			STATE_D : begin
+
+				if (type_FSM) data_FSM = M.AddrData[47:32];
+				else M.AddrData = data_FSM[47:32];
+
+			end
+
+			STATE_E : begin
+
+				if (type_FSM) data_FSM = M.AddrData[63:48];
+				else M.AddrData = data_FSM[63:48];
+
+				cycle_finish = 1'b1;
+
+			end
+	end
 
 endinterface : processor_if
