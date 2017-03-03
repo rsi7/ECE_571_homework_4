@@ -32,6 +32,8 @@
 	ulogic16		address;
 
 	ulogic64		write_data;
+	ulogic32		write_data_1;
+	ulogic32		write_data_2;
 	ulogic64		read_data;
 
 	/************************************************************************/
@@ -53,16 +55,21 @@
 		// simulation time
 		// write, then read results
 
+		repeat (4) @(posedge MasterBus.clk);
+
 		page = 4'h2;
 		address = 12'd32;
 
 		for (int i = 0; i < 16; i ++) begin
 
 			address = address + 8;
-			write_data = $urandom_range(64'hFFFFFFFFFFFFFFFF, 64'h0);
+
+			write_data_1 = $urandom_range(32'hFFFFFFFF, 32'h0);
+			write_data_2 = $urandom_range(32'hFFFFFFFF, 32'h0);
+			write_data = {write_data_1, write_data_2};
+
 			read_data = 64'h0;
 
-			repeat (1) @(posedge MasterBus.clk);
 			ProcIf.Proc_wrReq(page, address, write_data);
 			ProcIf.Proc_rdReq(page, address, read_data);
 
