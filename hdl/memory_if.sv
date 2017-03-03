@@ -42,11 +42,9 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 	ulogic1			type_FSM;
 	ulogic1			valid_FSM;
-	ulogic4			page_FSM;
 
 	ulogic16		AddrReg;
 	ulogic16		baseaddr_FSM;
-	ulogic16		data_FSM;
 
 	state_t			state;
 	state_t			next;
@@ -58,7 +56,7 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	always_ff@(posedge S.clk or posedge S.resetH) begin
 
 		// reset the FSM to waiting state
-		if (resetH) state <= STATE_A;
+		if (S.resetH) state <= STATE_A;
 
 		// otherwise, advance the state
 		else state <= next;
@@ -81,8 +79,6 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 			STATE_C : next = STATE_D;
 			STATE_D : next = STATE_E;
 			STATE_E : next = STATE_A;
-
-			default : next = STATE_X;
 
 		endcase
 	end
@@ -135,8 +131,9 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 			STATE_A, STATE_B : AddrReg = baseaddr_FSM;
 
-			STATE_C. STATE_D, STATE_E : AddrReg <= AddrReg + 1;
+			STATE_C, STATE_D, STATE_E : AddrReg <= AddrReg + 1;
 
 		endcase
+	end
 
 endinterface : memory_if

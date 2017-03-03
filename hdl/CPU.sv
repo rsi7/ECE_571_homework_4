@@ -29,7 +29,7 @@
 	int				fhandle;
 
 	ulogic4			page;
-	ulogic12		memdata;
+	ulogic64		memdata;
 	ulogic16		address;
 
 	/************************************************************************/

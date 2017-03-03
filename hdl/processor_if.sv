@@ -41,10 +41,10 @@ interface processor_if (main_bus_if.master M);
 	ulogic4			page_FSM;
 
 	ulogic16		baseaddr_FSM;
-	ulogic16		data_FSM;
+	ulogic64		data_FSM;
 
-	state_t			state;
-	state_t			next;
+	state_t			state = STATE_A;
+	state_t			next = STATE_A;
 
 	/************************************************************************/
 	/* Task : Proc_rdReq													*/
@@ -54,7 +54,7 @@ interface processor_if (main_bus_if.master M);
 
 		input bit	[3:0]				page, 
 		input bit 	[11:0] 				baseaddr, 
-		output bit 	[DBUFWIDTH-1:0] 	data
+		output bit 	[63:0] 				data
 
 		);
 
@@ -70,7 +70,7 @@ interface processor_if (main_bus_if.master M);
 
 			@(posedge M.clk) valid_FSM <= 1'b0;
 
-			wait(cycle_finish)
+			while(!cycle_finish)
 
 			data <= data_FSM;
 
@@ -86,7 +86,7 @@ interface processor_if (main_bus_if.master M);
 
 		input bit	[3:0]				page,
 		input bit	[11:0] 				baseaddr,
-		input bit	[DBUFWIDTH-1:0] 	data
+		input bit	[63:0] 				data
 
 		);
 
@@ -103,7 +103,8 @@ interface processor_if (main_bus_if.master M);
 
 			@(posedge M.clk) valid_FSM <= 1'b0;
 
-			wait(cycle_finish)
+			while(!cycle_finish) begin
+			end
 
 		end
 
@@ -116,7 +117,7 @@ interface processor_if (main_bus_if.master M);
 	always_ff@(posedge M.clk or posedge M.resetH) begin
 
 		// reset the FSM to waiting state
-		if (resetH) state <= STATE_A;
+		if (M.resetH) state <= STATE_A;
 
 		// otherwise, advance the state
 		else state <= next;
@@ -139,8 +140,6 @@ interface processor_if (main_bus_if.master M);
 			STATE_C : next = STATE_D;
 			STATE_D : next = STATE_E;
 			STATE_E : next = STATE_A;
-
-			default : next = STATE_X;
 
 		endcase
 	end
@@ -196,6 +195,7 @@ interface processor_if (main_bus_if.master M);
 				cycle_finish = 1'b1;
 
 			end
-	endcase
+		endcase
+	end
 
 endinterface : processor_if

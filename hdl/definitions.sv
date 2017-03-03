@@ -26,7 +26,7 @@
 		typedef	logic		unsigned	[1:0]	ulogic2;
 		typedef	logic		unsigned	[3:0]	ulogic4;
 		typedef	logic		unsigned	[7:0]	ulogic8;
-		typedef logic		unsigned	[11:0]	uloigc12;
+		typedef logic		unsigned	[11:0]	ulogic12;
 		typedef	logic		unsigned	[15:0]	ulogic16;
 		typedef	logic		unsigned	[31:0]	ulogic32;
 		typedef	logic		unsigned	[63:0]	ulogic64;
