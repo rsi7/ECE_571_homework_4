@@ -60,12 +60,12 @@
 		repeat (8) @(posedge MasterBus.clk);
 		ProcIf.Proc_rdReq(page, address, memdata);
 		
-		@(posedge MasterBus.clk);
+		repeat (8) @(posedge MasterBus.clk);
 
 		// write results to log file
 		$fwrite(fhandle, 	"page = %4d\t\t", page,
 							"address = %6d\t\t", address,
-							"memdata = %6d\n\n", memdata);
+							"memdata = %16x\n\n", memdata);
 
 		// wrap up file writing
 		$fwrite(fhandle, "\nEND OF FILE");

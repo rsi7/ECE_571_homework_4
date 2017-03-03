@@ -54,15 +54,17 @@ interface processor_if (main_bus_if.master M);
 
 	task Proc_rdReq (
 
-		input bit	[3:0]				page, 
-		input bit 	[11:0] 				baseaddr, 
-		output bit 	[63:0] 				data
+		input 	ulogic4		page, 
+		input 	ulogic12 	baseaddr, 
+		output	ulogic64	data
 
 		);
 
 		begin
 
-			cycle_finish <= 0;
+			data_FSM <= 64'd0;
+
+			cycle_finish <= 1'b0;
 
 			page_FSM <= page;
 			baseaddr_FSM <= baseaddr;
@@ -72,9 +74,11 @@ interface processor_if (main_bus_if.master M);
 
 			@(posedge M.clk) valid_FSM <= 1'b0;
 
-			while(!cycle_finish)
+			while(!cycle_finish) begin
+				@(posedge M.clk);
+			end
 
-			data <= data_FSM;
+			data = data_FSM;
 
 		end
 
@@ -86,15 +90,15 @@ interface processor_if (main_bus_if.master M);
 
 	task Proc_wrReq (
 
-		input bit	[3:0]				page,
-		input bit	[11:0] 				baseaddr,
-		input bit	[63:0] 				data
+		input	ulogic4		page,
+		input	ulogic12	baseaddr,
+		input	ulogic64 	data
 
 		);
 
 		begin
 
-			cycle_finish <= 0;
+			cycle_finish <= 1'b0;
 
 			page_FSM <= page;
 			baseaddr_FSM <= baseaddr;
@@ -106,6 +110,7 @@ interface processor_if (main_bus_if.master M);
 			@(posedge M.clk) valid_FSM <= 1'b0;
 
 			while(!cycle_finish) begin
+				@(posedge M.clk);
 			end
 
 		end
