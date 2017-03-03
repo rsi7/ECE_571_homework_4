@@ -34,14 +34,16 @@ interface processor_if (main_bus_if.master M);
 	/* Local parameters and variables										*/
 	/************************************************************************/
 
-	ulogic1			cycle_finish;
+	ulogic1			cycle_finish = 1'b0;
 
-	ulogic1			type_FSM;
-	ulogic1			valid_FSM;
+	ulogic1			type_FSM = 1'b0;
+	ulogic1			valid_FSM = 1'b0;
 	ulogic4			page_FSM;
 
 	ulogic16		baseaddr_FSM;
 	ulogic64		data_FSM;
+
+	ulogic16		M_AddrData_reg;
 
 	state_t			state = STATE_A;
 	state_t			next = STATE_A;
@@ -111,6 +113,12 @@ interface processor_if (main_bus_if.master M);
 	endtask : Proc_wrReq
 
 	/************************************************************************/
+	/* Wire assignments														*/
+	/************************************************************************/
+
+	assign M.AddrData = M_AddrData_reg;
+
+	/************************************************************************/
 	/* Mealy FSM Block 1: reset & state advancement							*/
 	/************************************************************************/
 
@@ -130,16 +138,16 @@ interface processor_if (main_bus_if.master M);
 
 	always_comb begin
 
-		unique case (state)
+		case (state)
 
 			// each state lasts exactly 1 cycle,
 			// except STATE_A, which holds until valid_FSM
 
-			STATE_A : next = (valid_FSM) ? STATE_B : STATE_A;
-			STATE_B : next = STATE_C;
-			STATE_C : next = STATE_D;
-			STATE_D : next = STATE_E;
-			STATE_E : next = STATE_A;
+			STATE_A : next <= (valid_FSM) ? STATE_B : STATE_A;
+			STATE_B : next <= STATE_C;
+			STATE_C : next <= STATE_D;
+			STATE_D : next <= STATE_E;
+			STATE_E : next <= STATE_A;
 
 		endcase
 	end
@@ -152,49 +160,50 @@ interface processor_if (main_bus_if.master M);
 
 		M.rw = 1'b0;
 		M.AddrValid = 1'b0;
-		M.AddrData = 'bz;
+		M_AddrData_reg = 'bz;
 
 		cycle_finish = 1'b0;
 
-		unique case (state)
+		case (state)
 
 			STATE_A : begin
 
 				M.rw = type_FSM;
 				M.AddrValid = valid_FSM;
-				M.AddrData = (valid_FSM) ? baseaddr_FSM : 'bz;
+				M_AddrData_reg = (valid_FSM) ? baseaddr_FSM : 'bz;
 
 			end
 
 			STATE_B : begin
 
-				if (type_FSM) data_FSM = M.AddrData[15:0];
-				else M.AddrData = data_FSM[15:0];
+				if (type_FSM) data_FSM[15:0] = M.AddrData;
+				else M_AddrData_reg = data_FSM[15:0];
 
 			end
 
 			STATE_C : begin
 
-				if (type_FSM) data_FSM = M.AddrData[31:16];
-				else M.AddrData = data_FSM[31:16];
+				if (type_FSM) data_FSM[31:16] = M.AddrData;
+				else M_AddrData_reg = data_FSM[31:16];
 
 			end
 
 			STATE_D : begin
 
-				if (type_FSM) data_FSM = M.AddrData[47:32];
-				else M.AddrData = data_FSM[47:32];
+				if (type_FSM) data_FSM[47:32] = M.AddrData;
+				else M_AddrData_reg = data_FSM[47:32];
 
 			end
 
 			STATE_E : begin
 
-				if (type_FSM) data_FSM = M.AddrData[63:48];
-				else M.AddrData = data_FSM[63:48];
+				if (type_FSM) data_FSM[63:48] = M.AddrData;
+				else M_AddrData_reg = data_FSM[63:48];
 
 				cycle_finish = 1'b1;
 
 			end
+
 		endcase
 	end
 

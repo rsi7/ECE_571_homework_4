@@ -40,14 +40,31 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/* Local parameters and variables										*/
 	/************************************************************************/
 
-	ulogic1			type_FSM;
-	ulogic1			valid_FSM;
+	ulogic1			type_FSM = 1'b0;
+	ulogic1			valid_FSM = 1'b0;
 
 	ulogic16		AddrReg;
 	ulogic16		baseaddr_FSM;
 
-	state_t			state;
-	state_t			next;
+	ulogic12		A_Addr_reg;
+	ulogic16		A_DataIn_reg;
+	ulogic16		A_rdEn_reg;
+	ulogic1			A_wrEn_reg;
+	ulogic16		S_AddrData_reg;
+
+	state_t			state = STATE_A;
+	state_t			next = STATE_A;
+
+	/************************************************************************/
+	/* Wire assignments														*/
+	/************************************************************************/
+
+	assign A.Addr 		= A_Addr_reg;
+	assign A.DataIn 	= A_DataIn_reg;
+	assign A.rdEn 		= A_rdEn_reg;
+	assign A.wrEn 		= A_wrEn_reg;
+	assign S.AddrData 	= S_AddrData_reg;
+
 
 	/************************************************************************/
 	/* Mealy FSM Block 1: reset & state advancement							*/
@@ -67,18 +84,20 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/* Mealy FSM Block 2: state transitions									*/
 	/************************************************************************/
 
-	always_comb begin
+	always_ff@(posedge S.clk) begin
 
-		unique case (state)
+		case (state)
 
 			// each state lasts exactly 1 cycle,
 			// except STATE_A, which holds until valid_FSM
 
-			STATE_A : next = (valid_FSM) ? STATE_B : STATE_A;
-			STATE_B : next = STATE_C;
-			STATE_C : next = STATE_D;
-			STATE_D : next = STATE_E;
-			STATE_E : next = STATE_A;
+			STATE_A : next <= (valid_FSM) ? STATE_B : STATE_A;
+			STATE_B : next <= STATE_C;
+			STATE_C : next <= STATE_D;
+			STATE_D : next <= STATE_E;
+			STATE_E : next <= STATE_A;
+
+			default : next <= STATE_A;
 
 		endcase
 	end
@@ -89,33 +108,36 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 	always_comb begin
 
-		A.Addr = 'z;
-		A.DataIn = 'z;
-		A.rdEn = 1'b0;
-		A.wrEn = 1'b0;
+		A_Addr_reg = 'z;
+		A_DataIn_reg = 'z;
+		A_rdEn_reg = 1'b0;
+		A_wrEn_reg = 1'b0;
 
-		S.AddrData = 'z;
+		S_AddrData_reg = 'z;
 
-		unique case (state)
+		case (state)
 
 			STATE_A : begin
 
 				type_FSM = S.rw;
 				baseaddr_FSM = S.AddrData;
 
-				A.Addr = (S.AddrValid) ? S.AddrData : 'z;
+				A_Addr_reg = (S.AddrValid) ? S.AddrData : 'z;
 
 			end
 
 			STATE_B, STATE_C, STATE_D, STATE_E : begin
 
-				A.Addr = AddrReg;
-				A.rdEn = (type_FSM);
-				A.wrEn = (!type_FSM);
+				A_Addr_reg = AddrReg;
+				A_rdEn_reg = (type_FSM);
+				A_wrEn_reg = (!type_FSM);
 
-				if (type_FSM) S.AddrData = A.DataOut;
-				else A.DataIn = S.AddrData;
+				if (type_FSM) S_AddrData_reg = A.DataOut;
+				else A_DataIn_reg = S.AddrData;
 
+			end
+
+			default : begin
 			end
 
 		endcase
@@ -127,11 +149,14 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 	always_ff@(posedge S.clk or posedge S.resetH) begin
 
-		unique case (state)
+		case (state)
 
-			STATE_A, STATE_B : AddrReg = baseaddr_FSM;
+			STATE_A, STATE_B : AddrReg <= baseaddr_FSM;
 
 			STATE_C, STATE_D, STATE_E : AddrReg <= AddrReg + 1;
+
+			default : begin
+			end
 
 		endcase
 	end

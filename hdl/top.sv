@@ -13,12 +13,15 @@
 
 module top();
 
+	timeunit 1ns;
+	timeprecision 100ps;
+	
 	/************************************************************************/
 	/* Local parameters and variables										*/
 	/************************************************************************/
 
-	ulogic1		clk;
-	ulogic1		resetH;
+	ulogic1		clk = 1'b0;
+	ulogic1		resetH = 1'b0;
 
 	/************************************************************************/
 	/* Module instantiations												*/
@@ -49,12 +52,13 @@ module top();
 	/************************************************************************/
 
 	initial begin
-		resetH = 1'b0;
 		resetH <= #1 1'b1;
 		resetH <= #1 1'b0;
 	end
 
 
-	always #0.5 clk <= !clk;
+	always begin
+		#0.5 clk <= !clk;
+	end
 
 endmodule

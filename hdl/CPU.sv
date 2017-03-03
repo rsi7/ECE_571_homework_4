@@ -55,7 +55,7 @@
 		address = 12'd32;
 
 		repeat (4) @(posedge MasterBus.clk);
-		ProcIf.Proc_wrReq(page, address, 63'd128);
+		ProcIf.Proc_wrReq(page, address, 64'h0004000300020001);
 		
 		repeat (8) @(posedge MasterBus.clk);
 		ProcIf.Proc_rdReq(page, address, memdata);
