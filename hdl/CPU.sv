@@ -29,8 +29,10 @@
 	int				fhandle;
 
 	ulogic4			page;
-	ulogic64		memdata;
 	ulogic16		address;
+
+	ulogic64		write_data;
+	ulogic64		read_data;
 
 	/************************************************************************/
 	/* initial block : send stimulus to processor_if						*/
@@ -54,18 +56,22 @@
 		page = 4'h2;
 		address = 12'd32;
 
-		repeat (4) @(posedge MasterBus.clk);
-		ProcIf.Proc_wrReq(page, address, 64'h0004000300020001);
-		
-		repeat (8) @(posedge MasterBus.clk);
-		ProcIf.Proc_rdReq(page, address, memdata);
-		
-		repeat (8) @(posedge MasterBus.clk);
+		for (int i = 0; i < 16; i ++) begin
 
-		// write results to log file
-		$fwrite(fhandle, 	"page = %4d\t\t", page,
-							"address = %6d\t\t", address,
-							"memdata = %16x\n\n", memdata);
+			address = address + 8;
+			write_data = $urandom_range(64'hFFFFFFFFFFFFFFFF, 64'h0);
+			read_data = 64'h0;
+
+			repeat (1) @(posedge MasterBus.clk);
+			ProcIf.Proc_wrReq(page, address, write_data);
+			ProcIf.Proc_rdReq(page, address, read_data);
+
+			// write results to log file
+			$fwrite(fhandle, 	"page = %4d\t\t", page,
+								"address = %6d\t\t", address,
+								"write_data = %16x\t\t", write_data,
+								"read_data = %16x\n\n", read_data);
+		end
 
 		// wrap up file writing
 		$fwrite(fhandle, "\nEND OF FILE");
