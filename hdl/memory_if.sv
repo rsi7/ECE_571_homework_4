@@ -41,7 +41,6 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/************************************************************************/
 
 	ulogic1			type_FSM = 1'b0;
-	ulogic1			valid_FSM = 1'b0;
 
 	ulogic16		AddrReg;
 	ulogic16		baseaddr_FSM;
@@ -84,20 +83,18 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/* Mealy FSM Block 2: state transitions									*/
 	/************************************************************************/
 
-	always_ff@(posedge S.clk) begin
+	always_comb begin
 
 		case (state)
 
 			// each state lasts exactly 1 cycle,
 			// except STATE_A, which holds until valid_FSM
 
-			STATE_A : next <= (valid_FSM) ? STATE_B : STATE_A;
-			STATE_B : next <= STATE_C;
-			STATE_C : next <= STATE_D;
-			STATE_D : next <= STATE_E;
-			STATE_E : next <= STATE_A;
-
-			default : next <= STATE_A;
+			STATE_A : next = (S.AddrValid) ? STATE_B : STATE_A;
+			STATE_B : next = STATE_C;
+			STATE_C : next = STATE_D;
+			STATE_D : next = STATE_E;
+			STATE_E : next = STATE_A;
 
 		endcase
 	end
@@ -137,9 +134,6 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 			end
 
-			default : begin
-			end
-
 		endcase
 	end
 
@@ -151,12 +145,9 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 		case (state)
 
-			STATE_A, STATE_B : AddrReg <= baseaddr_FSM;
+			STATE_A: AddrReg <= baseaddr_FSM;
 
-			STATE_C, STATE_D, STATE_E : AddrReg <= AddrReg + 1;
-
-			default : begin
-			end
+			STATE_B, STATE_C, STATE_D, STATE_E : AddrReg <= AddrReg + 1;
 
 		endcase
 	end
