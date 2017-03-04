@@ -5,7 +5,11 @@
 //
 // Description:
 // ------------
-// lorem ipsum
+// This is the CPU module for the HW4 assignment. It performs 1024 memory 
+// transactions (write, then read) and logs the results to a text file.
+// The address, page, and write data for each transaction is randomly generated.
+// It performs the reads and writes through the Proc_wrReq and Proc_rdReq tasks
+// within the processor_if interface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,10 +31,11 @@
 	/************************************************************************/
 
 	int				fhandle;
+	ulogic16		errors = 0;
 
 	ulogic4			page;
 	ulogic1			page_choice;
-	ulogic16		address;
+	ulogic12		address;
 
 	ulogic64		write_data;
 	ulogic32		write_data_1;
@@ -61,9 +66,11 @@
 		page = 4'h2;
 		address = 12'd32;
 
-		for (int i = 0; i < 16; i ++) begin
+		for (int i = 0; i < 1024; i ++) begin
 
-			address = address + 8;
+			// setup the address, page & write data
+
+			address = $urandom_range(12'hFFF,12'h0);
 
 			write_data_1 = $urandom_range(32'hFFFFFFFF, 32'h0);
 			write_data_2 = $urandom_range(32'hFFFFFFFF, 32'h0);
@@ -75,7 +82,7 @@
 
 			read_data = 64'h0;
 
-
+			// perform a read and write
 			ProcIf.Proc_wrReq(page, address, write_data);
 			ProcIf.Proc_rdReq(page, address, read_data);
 
@@ -83,11 +90,15 @@
 			$fwrite(fhandle, 	"page = %4d\t\t", page,
 								"address = %6d\t\t", address,
 								"write_data = %16x\t\t", write_data,
-								"read_data = %16x\n\n", read_data);
+								"read_data = %16x\n", read_data);
+
+			if (write_data != read_data) errors = errors + 1;
+
 		end
 
 		// wrap up file writing
-		$fwrite(fhandle, "\nEND OF FILE");
+		$fwrite(fhandle,"\nErrors found: %6d", errors);
+		$fwrite(fhandle, "\n\nEND OF FILE");
 		$fclose(fhandle);
 
 		// simulation over... review results

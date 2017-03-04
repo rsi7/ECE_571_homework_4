@@ -5,7 +5,9 @@
 //
 // Description:
 // ------------
-// lorem ipsum
+// This is the top-level module for HW4. It instantiates all other modules
+// and interfaces, sets the parameters for the memory interfaces, and starts
+// the clock signal.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,14 +54,8 @@ module top();
 
 
 	/************************************************************************/
-	/* initial block : clk & resetH											*/
+	/* always block : clk													*/
 	/************************************************************************/
-
-	initial begin
-		resetH <= #1 1'b1;
-		resetH <= #1 1'b0;
-	end
-
 
 	always begin
 		#0.5 clk <= !clk;
