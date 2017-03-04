@@ -41,13 +41,14 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/************************************************************************/
 
 	ulogic1			type_FSM = 1'b0;
+	ulogic1			page_valid = 1'b0;
 
-	ulogic16		AddrReg;
-	ulogic16		baseaddr_FSM;
+	ulogic12		AddrReg;
+	ulogic16		baseaddr_FSM = 16'd0;
 
 	ulogic12		A_Addr_reg;
 	ulogic16		A_DataIn_reg;
-	ulogic16		A_rdEn_reg;
+	ulogic1			A_rdEn_reg;
 	ulogic1			A_wrEn_reg;
 	ulogic16		S_AddrData_reg;
 
@@ -58,10 +59,10 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 	/* Wire assignments														*/
 	/************************************************************************/
 
-	assign A.Addr 		= A_Addr_reg;
-	assign A.DataIn 	= A_DataIn_reg;
-	assign A.rdEn 		= A_rdEn_reg;
-	assign A.wrEn 		= A_wrEn_reg;
+	assign A.Addr 		= (page_valid) ? A_Addr_reg : 'z;
+	assign A.DataIn 	= (page_valid) ? A_DataIn_reg : 'z;
+	assign A.rdEn 		= (page_valid) ? A_rdEn_reg : 'z;
+	assign A.wrEn 		= (page_valid) ? A_wrEn_reg : 'z;
 	assign S.AddrData 	= S_AddrData_reg;
 
 
@@ -118,8 +119,9 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 				type_FSM = S.rw;
 				baseaddr_FSM = S.AddrData;
+				page_valid = (baseaddr_FSM[15:12] == PAGE);
 
-				A_Addr_reg = (S.AddrValid) ? S.AddrData : 'z;
+				A_Addr_reg = (S.AddrValid) ? S.AddrData[11:0] : 'z;
 
 			end
 
@@ -129,7 +131,7 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 				A_rdEn_reg = (type_FSM);
 				A_wrEn_reg = (!type_FSM);
 
-				if (type_FSM) S_AddrData_reg = A.DataOut;
+				if (type_FSM) S_AddrData_reg = (page_valid) ? A.DataOut : 'z;
 				else A_DataIn_reg = S.AddrData;
 
 			end
@@ -145,7 +147,7 @@ interface memory_if #(parameter logic [3:0] PAGE = 4'h2) (
 
 		case (state)
 
-			STATE_A: AddrReg <= baseaddr_FSM;
+			STATE_A: AddrReg <= baseaddr_FSM[11:0];
 
 			STATE_B, STATE_C, STATE_D, STATE_E : AddrReg <= AddrReg + 1;
 

@@ -38,7 +38,6 @@ interface processor_if (main_bus_if.master M);
 
 	ulogic1			type_FSM = 1'b0;
 	ulogic1			valid_FSM = 1'b0;
-	ulogic4			page_FSM;
 
 	ulogic16		baseaddr_FSM;
 	ulogic64		data_FSM;
@@ -66,8 +65,7 @@ interface processor_if (main_bus_if.master M);
 
 			cycle_finish <= 1'b0;
 
-			page_FSM <= page;
-			baseaddr_FSM <= baseaddr;
+			baseaddr_FSM <= {page, baseaddr};
 
 			valid_FSM <= 1'b1;
 			type_FSM <= 1'b1;
@@ -100,8 +98,7 @@ interface processor_if (main_bus_if.master M);
 
 			cycle_finish <= 1'b0;
 
-			page_FSM <= page;
-			baseaddr_FSM <= baseaddr;
+			baseaddr_FSM <= {page, baseaddr};
 			data_FSM <= data;
 
 			valid_FSM <= 1'b1;

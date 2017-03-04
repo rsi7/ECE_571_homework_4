@@ -29,6 +29,7 @@
 	int				fhandle;
 
 	ulogic4			page;
+	ulogic1			page_choice;
 	ulogic16		address;
 
 	ulogic64		write_data;
@@ -68,7 +69,12 @@
 			write_data_2 = $urandom_range(32'hFFFFFFFF, 32'h0);
 			write_data = {write_data_1, write_data_2};
 
+			page_choice = $urandom_range(1'd1, 1'd0);
+			if (page_choice) page = 4'h2;
+			else page = 4'h1;
+
 			read_data = 64'h0;
+
 
 			ProcIf.Proc_wrReq(page, address, write_data);
 			ProcIf.Proc_rdReq(page, address, read_data);

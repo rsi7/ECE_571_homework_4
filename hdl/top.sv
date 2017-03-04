@@ -38,7 +38,11 @@ module top();
 
 	memArray_if i_memArray_if		();
 
-	memory_if i_memory_if			(.S(i_main_bus_if.slave),
+	memory_if #(4'h2) i_memory_if	(.S(i_main_bus_if.slave),
+									.A(i_memArray_if.MemIF)
+									);
+
+	memory_if #(4'h1) i2_memory_if	(.S(i_main_bus_if.slave),
 									.A(i_memArray_if.MemIF)
 									);
 
